@@ -205,27 +205,71 @@ class HubFrame(ctk.CTkFrame):
         top.grab_set()
         
         ctk.CTkLabel(top, text="Editar Nome/Ícone").pack(pady=5)
-        e_nome = ctk.CTkEntry(top); e_nome.insert(0, nome_atual); e_nome.pack()
-        m_icone = ctk.CTkOptionMenu(top, values=ICONES_DISPONIVEIS); m_icone.set(icone_atual); m_icone.pack(pady=5)
-        ctk.CTkButton(top, text="Atualizar", command=lambda: [self.db.update_categoria(cat_id, e_nome.get(), m_icone.get()), self.carregar_cards()]).pack(pady=5)
-        
+        e_nome = ctk.CTkEntry(top)
+        e_nome.insert(0, nome_atual)
+        e_nome.pack()
+
+        m_icone = ctk.CTkOptionMenu(top, values=ICONES_DISPONIVEIS)
+        m_icone.set(icone_atual)
+        m_icone.pack(pady=5)
+
+        ctk.CTkButton(
+            top,
+            text="Atualizar",
+            command=lambda: [
+                self.db.update_categoria(cat_id, e_nome.get(), m_icone.get()),
+                self.carregar_cards()
+            ]
+        ).pack(pady=5)
+
+        e_new = ctk.CTkEntry(top, placeholder_text="Novo defeito...")
+        e_new.pack(pady=(15, 5), padx=20, fill="x")
+
+        ctk.CTkButton(
+            top,
+            text="Add Defeito",
+            command=lambda: [
+                self.db.add_defeito_single(cat_id, e_new.get()),
+                e_new.delete(0, 'end'),
+                recarregar()
+            ]
+        ).pack(pady=(0, 10))
+
         frame_lista = ctk.CTkScrollableFrame(top, height=200)
-        frame_lista.pack(fill="x", padx=20)
-        
-        e_new = ctk.CTkEntry(top, placeholder_text="Novo defeito..."); e_new.pack(pady=5)
-        ctk.CTkButton(top, text="Add Defeito", command=lambda: [self.db.add_defeito_single(cat_id, e_new.get()), e_new.delete(0,'end'), recarregar()]).pack()
-        ctk.CTkButton(top, text="Excluir Produto", fg_color="red", command=lambda: [self.db.delete_categoria(cat_id), self.carregar_cards(), top.destroy()]).pack(pady=20)
+        frame_lista.pack(fill="both", expand=True, padx=20)
+
+        ctk.CTkButton(
+            top,
+            text="Excluir Produto",
+            fg_color="red",
+            command=lambda: [
+                self.db.delete_categoria(cat_id),
+                self.carregar_cards(),
+                top.destroy()
+            ]
+        ).pack(pady=20)
 
         def recarregar():
-            for w in frame_lista.winfo_children(): w.destroy()
-            for d in self.db.get_defeitos(cat_id):
-                f = ctk.CTkFrame(frame_lista); f.pack(fill="x", pady=2)
-                ctk.CTkLabel(f, text=d).pack(side="left")
-                ctk.CTkButton(f, text="X", width=30, fg_color="red", command=lambda d=d: [self.db.delete_defeito_single(cat_id, d), recarregar()]).pack(side="right")
-        recarregar()
-        
-       
+            for w in frame_lista.winfo_children():
+                w.destroy()
 
+            for d in self.db.get_defeitos(cat_id):
+                f = ctk.CTkFrame(frame_lista)
+                f.pack(fill="x", pady=2)
+
+                ctk.CTkLabel(f, text=d).pack(side="left")
+                ctk.CTkButton(
+                    f,
+                    text="X",
+                    width=30,
+                    fg_color="red",
+                    command=lambda d=d: [
+                        self.db.delete_defeito_single(cat_id, d),
+                        recarregar()
+                    ]
+                ).pack(side="right")
+
+        recarregar()
 
 class TriageFrame(ctk.CTkFrame):
     def __init__(self, master, db, categoria_id, nome_categoria, callback_voltar):
@@ -351,7 +395,6 @@ class TriageFrame(ctk.CTkFrame):
         self.entry_cod.focus()
 
     def atualizar_tabela(self):
-        # Limpar tabela atual
         for item in self.tree.get_children():
             self.tree.delete(item)
             
